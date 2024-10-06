@@ -199,7 +199,7 @@ function getUser(){
 function checkPremium(){
     let user = user_data || Storage.get('account_user','{}')
 
-    return user.id ? Utils.countDays(Date.now(), user.premium) : 0
+    return 1 //user.id ? Utils.countDays(Date.now(), user.premium) : 0
 }
 
 function timelines(full, visual){

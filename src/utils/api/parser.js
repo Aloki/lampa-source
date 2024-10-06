@@ -144,7 +144,7 @@ function jackett(params = {}, oncomplite, onerror){
 
     let u = url + '/api/v2.0/indexers/'+(Storage.field('jackett_interview') == 'healthy' ? 'status:healthy' : 'all')+'/results?apikey='+Storage.field('jackett_key')+'&Query='+encodeURIComponent(params.search)
 
-    if(!params.from_search){
+    if(!params.from_search && false){
         let genres = params.movie.genres.map((a)=>{
             return a.name
         })

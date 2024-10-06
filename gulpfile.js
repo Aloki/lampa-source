@@ -4,13 +4,11 @@ process.on('uncaughtException', function (err) {
 });
 
 
-const { src, dest, series, parallel } = require('gulp');
+const { src, dest, series } = require('gulp');
 
 var concat         = require('gulp-concat'),
-    chokidar       = require('chokidar'),
     uglify         = require('gulp-uglify-es').default,
     uglifycss      = require('gulp-uglifycss'),
-    browser        = require('browser-sync').create(),
     newer          = require('gulp-newer'),
     sass           = require('gulp-sass')(require('sass')),
     autoprefixer   = require('gulp-autoprefixer'),
@@ -219,59 +217,11 @@ function sync_doc(){
         .pipe(dest(docFolder));
 }
 
-/** Следим за изменениями в файлах **/
-function watch(done){
-    var watcher = chokidar.watch([srcFolder,pubFolder,plgFolder], { persistent: true, ignored: [pubFolder + '/lang']});
-
-    var timer;
-    var change = function(path){
-        clearTimeout(timer)
-
-        if(path.indexOf('.css') > -1) return;
-
-        timer = setTimeout(
-            series(merge, plugins, sass_task, lang_task, sync_web, build_web)
-        ,5000)
-    }
-
-    watcher.on('add', function(path) {
-        console.log('File', path, 'has been added');
-
-        change(path)
-    })
-    .on('change', function(path) {
-        console.log('File', path, 'has been changed');
-
-        change(path)
-    })
-    .on('unlink', function(path) {
-        console.log('File', path, 'has been unlink');
-
-        change(path)
-    })
-
-    done();
-}
-
-function browser_sync(done) {
-    browser.init({
-        server: {
-            baseDir: bulFolder+'web/'
-        },
-        open: false,
-        notify: false,
-        ghostMode: false,
-    });
-
-    done();
-}
-
 function sass_task(){
     return src(srcFolder+'/sass/*.scss')
         .pipe(sass.sync().on('error', sass.logError)) // Преобразуем Sass в CSS посредством gulp-sass
         .pipe(autoprefixer(['last 100 versions', '> 1%', 'ie 8', 'ie 7', 'ios 6', 'android 4'], { cascade: true })) // Создаем префиксы
         .pipe(dest(pubFolder+'/css'))
-        .pipe(browser.reload({stream: true}))
 }
 
 function uglify_task() {
@@ -361,6 +311,6 @@ exports.pack_tizen   = series(sync_tizen, uglify_task, public_tizen, index_tizen
 exports.pack_github  = series(sync_github, uglify_task, public_github, index_github);
 exports.pack_plugins = series(plugins);
 exports.test         = series(test);
-exports.default = parallel(watch, browser_sync);
+exports.default = series(merge, plugins, sass_task, lang_task, sync_web, build_web);
 exports.debug = series(enable_debug_mode, this.default)
 exports.doc = series(sync_doc, buildDoc)
